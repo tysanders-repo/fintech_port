@@ -37,18 +37,51 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 ## 1. Project & Infrastructure Setup
 - [x] Scaffold new T3 app (`create-t3-app`)
 - [x] Install & configure TailwindCSS
-- [ ] setup shadui
-- [ ] setup visx
+- [x] setup shadui
+- [ ] setup visx (gen library/ skip for now until)
 - [ ] Configure global layout & styles
-- [ ] Initialize Drizzle ORM  
-  - [ ] Set up database connection  
-  - [ ] Create initial migrations
-- [ ] Set up tRPC  
-  - [ ] Create `appRouter`  
-  - [ ] Wire up `createNextApiHandler`
+- [x] Initialize Drizzle ORM  
+  - [x] Set up database connection  
+  - [x] Create initial migrations
+- [x] Set up tRPC  
+  - [x] Create `appRouter`  
+  - [x] Wire up `createNextApiHandler`
+- [x] Design ER diagram for database schema
 - [ ] Configure Vercel (or preferred host) for CI/CD
 
-## 2. Authentication & User Management
+## 2. Database Modeling
+- [x] Define Drizzle schema  
+ ```Drizzle
+  //user related models
+  model Users { … }
+  model Accounts { … }
+  model Sessions { … }
+  model verificationTokens { … }
+
+  //finanial related models
+  model BankAccounts { … }
+  model Transactions { … }
+  model RoundUps { … }
+  ```
+- [ ] Run `prisma migrate dev` & generate client
+- [ ] Seed with test data (optional)
+
+## 3. CSV inport integration
+- [ ] Create CSV upload endpoint  
+  - [ ] Use `multer` or similar for file handling
+- [ ] Parse CSV file
+  - [ ] Use `papaparse` or `csv-parser`
+  - [ ] Validate data against Prisma schema
+- [ ] Insert parsed data into database
+- [ ] Create tRPC mutation for CSV upload
+  - [ ] Handle errors & edge cases
+- [ ] UI component for CSV upload
+- [ ] Display upload progress & results
+- [ ] Add unit tests for CSV parsing & upload logic
+- [ ] Document CSV format requirements
+- [ ] Add error handling for invalid CSV formats
+
+## 4. Authentication & User Management
 - [ ] Install & configure NextAuth.js  
   - [ ] Email/password provider (or OAuth)  
   - [ ] Session callbacks → attach to Prisma `User`
@@ -59,19 +92,6 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
   - [ ] Sign-in form  
   - [ ] Sign-out button  
   - [ ] Session state handling in layout
-
-## 3. Database Modeling
-- [ ] Define Prisma schema  
-  ```prisma
-  model User { … }
-  model BankAccount { … }
-  model Transaction { … }
-  model RoundUp { … }
-  model Transfer { … }
-  ```
-
-- [ ] Run `prisma migrate dev` & generate client
-- [ ] Seed with test data (optional)
 
 ## 4. Pages & Flows
 

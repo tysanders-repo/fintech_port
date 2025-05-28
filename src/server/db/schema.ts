@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import { index, primaryKey, sqliteTableCreator } from "drizzle-orm/sqlite-core";
 import type { AdapterAccount } from "next-auth/adapters";
+import { d } from "node_modules/drizzle-kit/index-BAUrj6Ib.mjs";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -10,27 +11,55 @@ import type { AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = sqliteTableCreator((name) => `fintech_port_${name}`);
 
-export const posts = createTable(
-	"post",
-	(d) => ({
-		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
-		name: d.text({ length: 256 }),
-		createdById: d
-			.text({ length: 255 })
-			.notNull()
-			.references(() => users.id),
-		createdAt: d
-			.integer({ mode: "timestamp" })
-			.default(sql`(unixepoch())`)
-			.notNull(),
-		updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
-	}),
-	(t) => [
-		index("created_by_idx").on(t.createdById),
-		index("name_idx").on(t.name),
-	],
-);
+// TRANSACTIONS
+export const transactions = createTable("transactions", (d) => ({
+  id: d
+    .text({ length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: d
+    .text({ length: 255 })
+    .notNull()
+    .references(() => users.id),
+  bankAccountId: d
+    .text({ length: 255 })
+    .notNull(),
+  amount: d.numeric()
+}));
 
+// BANKACCOUNTS TODO: expand to add real accounts with stripe maybe
+export const bankAccounts = createTable("bankAccounts", (d) => ({
+  id: d
+    .text({ length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: d
+    .text({ length: 255 })
+    .notNull()
+    .references(() => users.id),
+}))
+
+// ROUNDUPS
+export const roundUps = createTable('roundUps', (d) => ({
+  id: d
+    .text({ length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: d
+    .text({ length: 255 })
+    .notNull()
+    .references(() => users.id),
+  transactionId: d
+    .text({ length: 255 })
+    .notNull()
+    .references(() => transactions.id),
+  amount_cents: d.integer(),
+}));
+
+// USERS
 export const users = createTable("user", (d) => ({
 	id: d
 		.text({ length: 255 })
@@ -43,10 +72,12 @@ export const users = createTable("user", (d) => ({
 	image: d.text({ length: 255 }),
 }));
 
+// ?
 export const usersRelations = relations(users, ({ many }) => ({
 	accounts: many(accounts),
 }));
 
+// ACCOUNTS
 export const accounts = createTable(
 	"account",
 	(d) => ({
@@ -73,10 +104,9 @@ export const accounts = createTable(
 	],
 );
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
-	user: one(users, { fields: [accounts.userId], references: [users.id] }),
-}));
+// ?
 
+// SESSIONS
 export const sessions = createTable(
 	"session",
 	(d) => ({
@@ -90,11 +120,15 @@ export const sessions = createTable(
 	(t) => [index("session_userId_idx").on(t.userId)],
 );
 
+
+// ?
 export const sessionsRelations = relations(sessions, ({ one }) => ({
 	user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
 
-export const verificationTokens = createTable(
+
+// JWST TOKENS?
+export const t = createTable(
 	"verification_token",
 	(d) => ({
 		identifier: d.text({ length: 255 }).notNull(),
