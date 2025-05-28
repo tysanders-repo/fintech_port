@@ -10,7 +10,7 @@ If you are not familiar with the different technologies used in this project, pl
 
 - [Next.js](https://nextjs.org)
 - [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
+- [drizzle](https://drizzle.io)
 - [Drizzle](https://orm.drizzle.team)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
@@ -63,19 +63,17 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
   model Transactions { … }
   model RoundUps { … }
   ```
-- [ ] Run `prisma migrate dev` & generate client
-- [ ] Seed with test data (optional)
+- [x] Run `npx drizzle-kit migrate + generate`
 
 ## 3. CSV inport integration
-- [ ] Create CSV upload endpoint  
-  - [ ] Use `multer` or similar for file handling
-- [ ] Parse CSV file
-  - [ ] Use `papaparse` or `csv-parser`
-  - [ ] Validate data against Prisma schema
+- [x] Create html file input for CSV upload
+- [ ] Parse CSV file (write utility function)
+  - [x] Use `papaparse` or `csv-parser`
+  - [ ] Validate data against drizzle schema
 - [ ] Insert parsed data into database
-- [ ] Create tRPC mutation for CSV upload
+- [ ] Create tRPC mutation for CSV data upload
   - [ ] Handle errors & edge cases
-- [ ] UI component for CSV upload
+- [ ] write better looking UI component for CSV upload base on shadui
 - [ ] Display upload progress & results
 - [ ] Add unit tests for CSV parsing & upload logic
 - [ ] Document CSV format requirements
@@ -84,7 +82,7 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 ## 4. Authentication & User Management
 - [ ] Install & configure NextAuth.js  
   - [ ] Email/password provider (or OAuth)  
-  - [ ] Session callbacks → attach to Prisma `User`
+  - [ ] Session callbacks → attach to drizzle `User`
 - [ ] Create tRPC utilities  
   - [ ] `getSession()` and `getUser()` queries  
   - [ ] Protect server procedures with `isAuthed` middleware
