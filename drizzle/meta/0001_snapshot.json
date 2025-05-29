@@ -1,6 +1,6 @@
 {
-	"id": "fbb2a50c-fb37-4d90-a3fc-67a93eee5798",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "815fc547-219c-4e3f-9814-ddba6b005750",
+	"prevId": "fbb2a50c-fb37-4d90-a3fc-67a93eee5798",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -287,6 +287,18 @@
 				"amount": {
 					"name": "amount",
 					"type": "numeric",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"category": {
+					"name": "category",
+					"type": "text",
 					"primaryKey": false,
 					"notNull": false
 				}
