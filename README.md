@@ -67,29 +67,27 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 ## 3. CSV inport integration
 - [x] Create html file input for CSV upload
-- [ ] Parse CSV file (write utility function)
+- [x] Parse CSV file (write utility function)
   - [x] Use `papaparse` or `csv-parser`
-  - [ ] Validate data against drizzle schema
-- [ ] Insert parsed data into database
-- [ ] Create tRPC mutation for CSV data upload
-  - [ ] Handle errors & edge cases
-- [ ] write better looking UI component for CSV upload base on shadui
+  - [x] Validate data against drizzle schema
+- [x] Insert parsed data into database
+- [ ] write better looking UI component for CSV upload based on shadui
 - [ ] Display upload progress & results
 - [ ] Add unit tests for CSV parsing & upload logic
 - [ ] Document CSV format requirements
 - [ ] Add error handling for invalid CSV formats
 
 ## 4. Authentication & User Management
-- [ ] Install & configure NextAuth.js  
-  - [ ] Email/password provider (or OAuth)  
-  - [ ] Session callbacks → attach to drizzle `User`
-- [ ] Create tRPC utilities  
-  - [ ] `getSession()` and `getUser()` queries  
-  - [ ] Protect server procedures with `isAuthed` middleware
-- [ ] UI components  
-  - [ ] Sign-in form  
-  - [ ] Sign-out button  
-  - [ ] Session state handling in layout
+- [x] Install & configure NextAuth.js  
+  - [x] Email/password provider (or OAuth)  
+  - [x] Session callbacks → attach to drizzle `User`
+- [x] Create tRPC utilities  
+  - [x] `getSession()` and `getUser()` queries  
+  - [x] Protect server procedures with `isAuthed` middleware
+- [x] UI components  
+  - [x] Sign-in form  
+  - [x] Sign-out button  
+  - [x] Session state handling in layout
 
 ## 4. Pages & Flows
 

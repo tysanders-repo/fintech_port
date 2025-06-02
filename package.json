@@ -19,7 +19,10 @@
 	},
 	"dependencies": {
 		"@auth/drizzle-adapter": "^1.7.2",
+		"@hookform/resolvers": "^5.0.1",
 		"@libsql/client": "^0.14.0",
+		"@radix-ui/react-label": "^2.1.7",
+		"@radix-ui/react-slot": "^1.2.3",
 		"@t3-oss/env-nextjs": "^0.12.0",
 		"@tanstack/react-query": "^5.69.0",
 		"@trpc/client": "^11.0.0",
@@ -36,10 +39,11 @@
 		"postgres": "^3.4.7",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
+		"react-hook-form": "^7.57.0",
 		"server-only": "^0.0.1",
 		"superjson": "^2.2.1",
 		"tailwind-merge": "^3.3.0",
-		"zod": "^3.24.2"
+		"zod": "^3.25.48"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
