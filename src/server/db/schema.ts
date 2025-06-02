@@ -39,6 +39,9 @@ export const bankAccounts = createTable("bankAccounts", (d) => ({
 		.varchar({ length: 255 })
 		.notNull()
 		.references(() => users.id),
+  name: d
+    .varchar({ length: 255 })
+    .notNull()
 }));
 
 // ROUNDUPS

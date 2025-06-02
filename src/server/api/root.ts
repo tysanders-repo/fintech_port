@@ -1,4 +1,5 @@
 import { transactionRouter } from "~/server/api/routers/transactions";
+import {bankRouter } from "~/server/api/routers/bank"
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -8,6 +9,7 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
 	transaction: transactionRouter,
+  bank: bankRouter,
 });
 
 // export type definition of API
