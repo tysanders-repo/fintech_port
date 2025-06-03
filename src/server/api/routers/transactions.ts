@@ -35,8 +35,11 @@ export const transactionRouter = createTRPCRouter({
 				userId: userId,
 			}));
 
-			const result = await ctx.db.insert(transactions).values(toInsert).returning();
+			const result = await ctx.db
+				.insert(transactions)
+				.values(toInsert)
+				.returning();
 
-      return {success: true, result};
+			return { success: true, result };
 		}),
 });
