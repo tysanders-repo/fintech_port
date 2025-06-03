@@ -17,7 +17,7 @@ If you are not familiar with the different technologies used in this project, pl
 
 ## Learn More
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:</SessionProvider>
 
 - [Documentation](https://create.t3.gg/)
 - [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
@@ -104,11 +104,11 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 ### 4.2 Sign-Up / Onboarding Flow
 
-- [ ] --Sign-Up Page--
+- [x] --Sign-Up Page--
 
-  - [ ] Form fields: name, email, password
-  - [ ] Client-side validation (zod)
-  - [ ] tRPC mutation → create account
+  - [x] Form fields: name, email, password
+  - [x] Client-side validation (zod)
+  - [x] tRPC mutation → create account
 - [ ] --Email Verification--
 
   - [ ] Send verification link
@@ -118,8 +118,8 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
   - [ ] Modal/steps:
 
     - [ ] Link your first bank
-    - [ ] See a sample round-up
-    - [ ] Set a savings goal
+    - [x] See a sample round-up
+    - [x] Set a savings goal
   - [ ] Persist “completedOnboarding” flag
 
 ### 4.3 Dashboard & Connected Entities

@@ -1,6 +1,6 @@
 "use client"
 
-import { z } from "zod"
+import { coerce, z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {Input} from "~/components/ui/input"
@@ -26,11 +26,11 @@ const FormSchema = z.object({
   bankName:    z.string()
                 .min(2, "Bank name must be at least 2 characters long"),
   
-  roundUp:     z.number()
+  roundUp:     z.coerce.number()
                 .positive("Round up must be a positive value")
                 .int("Round up must be a whole number"),
 
-  savingsGoal: z.number()
+  savingsGoal: z.coerce.number()
                 .positive("Savings goal must be a positive value")
                 .int("Savings goal must be a whole number"),
 
@@ -125,7 +125,7 @@ export function OnboardingForm() {
 
   return(
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
         <FormField
           control={form.control}
           name="bankName"
@@ -135,6 +135,7 @@ export function OnboardingForm() {
               <FormControl>
                 <Input placeholder="bank inc." {...field} />
               </FormControl>
+              <FormDescription>Enter the name of your primary bank</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -162,10 +163,11 @@ export function OnboardingForm() {
           name="savingsGoal"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Round Up</FormLabel>
+              <FormLabel>Savings Goal</FormLabel>
               <FormControl>
                 <Input type="number" placeholder="1000" prefix="$" {...field} />
               </FormControl>
+              <FormDescription>Your target savings amount</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -176,7 +178,7 @@ export function OnboardingForm() {
           name="csvFile"
           render={({ field: { value, onChange, ...fieldProps } }) => (
             <FormItem>
-              <FormLabel>Round Up</FormLabel>
+              <FormLabel>Transactions File</FormLabel>
               <FormControl>
                 <Input
                   type="file"
