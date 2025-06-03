@@ -7,6 +7,7 @@ import {
   AppleIcon,
   GoogleIcon
 } from "~/app/_components/icons";
+import Discord from "next-auth/providers/discord";
 
 interface LoginFormProps {
   newUser: boolean;
@@ -32,7 +33,7 @@ export function SignUpLoginForm({ newUser }: LoginFormProps) {
               variant="outline"
               type="button"
               className="w-full"
-              onClick={() => signIn("discord")}
+              onClick={() => signIn("discord", { callbackUrl: '/dashboard' })}
             >
               <DiscordIcon />
               Continue with Discord
@@ -42,7 +43,7 @@ export function SignUpLoginForm({ newUser }: LoginFormProps) {
               variant="outline"
               type="button"
               className="w-full"
-              onClick={() => signIn("google")}
+              onClick={() => signIn("google", { callbackUrl: '/dashboard' })}
             >
               <GoogleIcon />
                 Continue with Google
@@ -52,7 +53,7 @@ export function SignUpLoginForm({ newUser }: LoginFormProps) {
               variant="outline"
               type="button"
               className="w-full"
-              onClick={() => signIn("apple")}
+              onClick={() => signIn("apple", { callbackUrl: '/dashboard' })}
             >
               <AppleIcon />
                 Continue with Apple
