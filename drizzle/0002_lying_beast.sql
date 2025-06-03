@@ -1,1 +1,0 @@
-ALTER TABLE "fintech_port_transactions" ADD COLUMN "balance" numeric;

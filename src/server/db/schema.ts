@@ -62,6 +62,7 @@ export const roundUps = createTable("roundUps", (d) => ({
 	amount_cents: d.integer(),
 }));
 
+
 // USERS
 export const users = createTable("user", (d) => ({
 	id: d
@@ -78,6 +79,8 @@ export const users = createTable("user", (d) => ({
 		})
 		.default(sql`CURRENT_TIMESTAMP`),
 	image: d.varchar({ length: 255 }),
+  roundUp: d.numeric(),
+  savingsGoal: d.numeric(),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({

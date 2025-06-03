@@ -1,1 +1,0 @@
-ALTER TABLE "fintech_port_bankAccounts" ADD COLUMN "name" varchar(255) NOT NULL;

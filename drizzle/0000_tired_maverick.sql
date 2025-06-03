@@ -15,7 +15,8 @@ CREATE TABLE "fintech_port_account" (
 --> statement-breakpoint
 CREATE TABLE "fintech_port_bankAccounts" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
-	"userId" varchar(255) NOT NULL
+	"userId" varchar(255) NOT NULL,
+	"name" varchar(255) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "fintech_port_roundUps" (
@@ -35,7 +36,10 @@ CREATE TABLE "fintech_port_transactions" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"userId" varchar(255) NOT NULL,
 	"bankAccountId" varchar(255) NOT NULL,
-	"amount" numeric
+	"amount" numeric,
+	"balance" numeric,
+	"description" text,
+	"category" text
 );
 --> statement-breakpoint
 CREATE TABLE "fintech_port_user" (
@@ -43,7 +47,9 @@ CREATE TABLE "fintech_port_user" (
 	"name" varchar(255),
 	"email" varchar(255) NOT NULL,
 	"emailVerified" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-	"image" varchar(255)
+	"image" varchar(255),
+	"roundUp" numeric,
+	"savingsGoal" numeric
 );
 --> statement-breakpoint
 CREATE TABLE "fintech_port_verification_token" (

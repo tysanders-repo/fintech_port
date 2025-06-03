@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1748467265717,
-      "tag": "0000_light_blue_blade",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1748478805560,
-      "tag": "0001_lovely_kang",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1748479022855,
-      "tag": "0002_lying_beast",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1748897478391,
-      "tag": "0003_mature_klaw",
+      "when": 1748981821032,
+      "tag": "0000_tired_maverick",
       "breakpoints": true
     }
   ]

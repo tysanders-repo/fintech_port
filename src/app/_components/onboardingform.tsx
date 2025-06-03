@@ -17,6 +17,9 @@ import {
   FormMessage,
 } from "~/components/ui/form"
 import { Button } from "~/components/ui/button";
+import { useRouter } from 'next/navigation'
+import { Progress } from "~/components/ui/progress"
+import { useState } from "react"
 
 
 type FileInput = FileList | null;
@@ -36,13 +39,21 @@ const FormSchema = z.object({
 
   csvFile:     z.custom<FileInput>()
                 .refine((files) => files && files.length > 0, "CSV file is required.")
-                .refine((files) => files && files[0]?.type === "text/csv",
-                        "Only .csv files are accepted.")
+                .refine(
+                  (files) => files && files.length > 0 &&
+                    (
+                      files[0]?.type === "text/csv" ||
+                      (files[0]?.name && files[0].name.toLowerCase().endsWith(".csv"))
+                    ),
+                  "Only .csv files are accepted."
+                )
 })
 
 
 export function OnboardingForm() {
   const { data: session, status } = useSession();
+  const router = useRouter();
+  const [progress, setProgress] = useState(0);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -54,8 +65,17 @@ export function OnboardingForm() {
     },
   })
 
-  const pushTransactionsMutation = api.transaction.pushTransactions.useMutation();
+  /*  
+    1. create bank
+    2. set savings goal and round up pref.
+    3. upload transactions
+    4. process round ups
+  */
+
   const createBankEntryMutation = api.bank.create.useMutation();
+  const modifyUserPreferencesMutation = api.user.update.useMutation();
+  const pushTransactionsMutation = api.transaction.pushTransactions.useMutation();
+  const createMultipleRoundUpMutation = api.roundUp.createMultiple.useMutation();
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     console.log("Form data:", data);
@@ -64,59 +84,101 @@ export function OnboardingForm() {
       if (!session?.user.id) {
         throw new Error("User ID is missing from session.");
       }
-
-      const { success: bankSuccess, bankId } = await createBankEntryMutation.mutateAsync({
+      
+      //Create user's first bank
+      const { success: bankSetupSuccess, bankId } = await createBankEntryMutation.mutateAsync({
         bankName: data.bankName,
         userId: session.user.id
       })
+
+      if (bankSetupSuccess){
+        setProgress(20);
+      } else {
+        throw new Error("Unable to create bank");
+      }
+      
+      // Update User's Savings and Round up preferences
+      const {success: userPrefSuccess} = await modifyUserPreferencesMutation.mutateAsync({
+        roundUp: data.roundUp,
+        savingsGoal: data.savingsGoal
+      })
+      
+      if (userPrefSuccess){
+        setProgress(40);
+      } else {
+        throw new Error("Unable to update user preferences to new roundup/savings goal");
+      }
     
 
-    const file = data.csvFile?.[0];
+      // Handle Transactions data
+      const file = data.csvFile?.[0];
+      let rows: any[] = [];
 
-    if (file) {
-      if (!bankId) {
-        form.setError("csvFile", {
-          type: "manual",
-          message: "Bank account creation failed. Please try again.",
-        });
-        return;
-      }
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        dynamicTyping: true,
-        complete: (results) => {
-          const rows = (results.data as any[]).map((row) => ({
-            amount: row["Amount"],
-            balance: row["Balance"],
-            description: row["Description"],
-          }));
-
-          pushTransactionsMutation.mutate(
-            {
-              bankAccountId: bankId,
-              rows,
-            },
-            {
-              onSuccess: () => {
-                console.log("Transactions uploaded successfully!");
-                // You might want to reset the form or show a success message here
-              },
-              onError: (error) => {
-                console.error("Failed to upload transactions:", error);
-              },
-            },
-          );
-        },
-        error: (err) => {
-          console.error("CSV parse failed:", err);
+      if (file) {
+        if (!bankId) {
           form.setError("csvFile", {
             type: "manual",
-            message: "CSV parsing error. Please check your file.",
+            message: "Bank account creation failed. Please try again.",
           });
-        },
-      });
-    }
+          return;
+        }
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: true,
+          complete: (results) => {
+            setProgress(60);
+
+            rows = (results.data as any[]).map((row) => ({
+              amount: row["Amount"],
+              balance: row["Balance"],
+              description: row["Description"],
+            }));
+            pushTransactionsMutation.mutate(
+              {
+                bankAccountId: bankId,
+                rows,
+              },
+              {
+                onSuccess: (insertedTransactions) => {
+                  setProgress(70);
+
+                  if (insertedTransactions && Array.isArray(insertedTransactions)) {
+                    const rows = insertedTransactions.map((row) => ({
+                      amount: data.roundUp - (Math.abs(Number(row.amount)) % data.roundUp),
+                      transactionId: row.id
+                    }));
+
+                    createMultipleRoundUpMutation.mutate({
+                      bankAccountId: bankId,
+                      rows
+                    });
+                  }
+                  setProgress(80)
+
+
+                  //on success, send to dashboard
+                  router.prefetch('/dashboard');
+                  setTimeout(() => setProgress(100), 50);
+                  router.push('/dashboard')
+
+                },
+                onError: (error) => {
+                  console.error("Failed to upload transactions:", error);
+                },
+              },
+            );
+          },
+          error: (err) => {
+            console.error("CSV parse failed:", err);
+            form.setError("csvFile", {
+              type: "manual",
+              message: "CSV parsing error. Please check your file.",
+            });
+          },
+        });
+      }
+
 
   } catch(error: any) {
     console.log("onboarding failed with error:", error);
@@ -125,80 +187,88 @@ export function OnboardingForm() {
 
   return(
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
-        <FormField
-          control={form.control}
-          name="bankName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bank Name</FormLabel>
-              <FormControl>
-                <Input placeholder="bank inc." {...field} />
-              </FormControl>
-              <FormDescription>Enter the name of your primary bank</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div className="flex flex-col items-center gap-6">
+        <div>
+          <h1 className="text-xl font-bold">Let's get you started!</h1>
+          <Progress value={progress} className="w-[100%]" />
+        </div>
 
-        <FormField
-          control={form.control}
-          name="roundUp"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Round Up</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="1" prefix="$" {...field} />
-              </FormControl>
-              <FormDescription>
-                This is the amount you'd like us to round up to, for automatic savings
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+          <FormField
+            control={form.control}
+            name="bankName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bank Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="bank inc." {...field} />
+                </FormControl>
+                <FormDescription>Enter the name of your primary bank</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="savingsGoal"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Savings Goal</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="1000" prefix="$" {...field} />
-              </FormControl>
-              <FormDescription>Your target savings amount</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="roundUp"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Round Up</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="1" prefix="$" {...field} />
+                </FormControl>
+                <FormDescription>
+                  This is the amount you'd like us to round up to, for automatic savings
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="csvFile"
-          render={({ field: { value, onChange, ...fieldProps } }) => (
-            <FormItem>
-              <FormLabel>Transactions File</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => onChange(e.target.files)}
-                  {...fieldProps}
-                />
-              </FormControl>
-              <FormDescription>
-                Upload a CSV file containing your bank transactions.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="savingsGoal"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Savings Goal</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="1000" prefix="$" {...field} />
+                </FormControl>
+                <FormDescription>Your target savings amount</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-      <Button type="submit" disabled={pushTransactionsMutation.isPending}>
-          {pushTransactionsMutation.isPending ? "Submitting..." : "Submit"}
-      </Button>
-      </form>
+          <FormField
+            control={form.control}
+            name="csvFile"
+            render={({ field: { value, onChange, ...fieldProps } }) => (
+              <FormItem>
+                <FormLabel>Transactions File</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => onChange(e.target.files)}
+                    {...fieldProps}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Upload a CSV file containing your bank transactions.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+        <Button className="w-full" type="submit" disabled={pushTransactionsMutation.isPending}>
+            {pushTransactionsMutation.isPending ? "Submitting..." : "Submit"}
+        </Button>
+
+        </form>
+      </div>
     </Form>
   );
 }
