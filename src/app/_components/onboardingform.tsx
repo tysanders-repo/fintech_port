@@ -79,7 +79,6 @@ export function OnboardingForm() {
 		api.roundUp.createMultiple.useMutation();
 
 	const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-		console.log("Form data:", data);
 
 		try {
 			if (!session?.user.id) {
@@ -137,6 +136,7 @@ export function OnboardingForm() {
 							amount: row["Amount"],
 							balance: row["Balance"],
 							description: row["Description"],
+              date: row["Posting Date"]
 						}));
 						pushTransactionsMutation.mutate(
 							{
@@ -144,31 +144,24 @@ export function OnboardingForm() {
 								rows,
 							},
 							{
-								onSuccess: (insertedTransactions) => {
+								onSuccess: async (insertedTransactions) => {
 									setProgress(70);
 
-									if (
-										insertedTransactions &&
-										Array.isArray(insertedTransactions)
-									) {
-										const rows = insertedTransactions.map((row) => ({
-											amount:
-												data.roundUp -
-												(Math.abs(Number(row.amount)) % data.roundUp),
+									if (!!insertedTransactions) {
+										const rows = insertedTransactions.result.map((row) => ({
+											amount: data.roundUp - (Math.abs(Number(row.amount)) % data.roundUp),
 											transactionId: row.id,
 										}));
 
-										createMultipleRoundUpMutation.mutate({
-											bankAccountId: bankId,
-											rows,
-										});
+										createMultipleRoundUpMutation.mutate({ rows });
 									}
+
 									setProgress(80);
 
 									//on success, send to dashboard
-									router.prefetch("/dashboard");
+									// router.prefetch("/dashboard");
 									setTimeout(() => setProgress(100), 50);
-									router.push("/dashboard");
+									// router.push("/dashboard");
 								},
 								onError: (error) => {
 									console.error("Failed to upload transactions:", error);
@@ -186,7 +179,7 @@ export function OnboardingForm() {
 				});
 			}
 		} catch (error: any) {
-			console.log("onboarding failed with error:", error);
+			console.error("onboarding failed with error:", error);
 		}
 	};
 

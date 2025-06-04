@@ -12,20 +12,24 @@ export const createTable = pgTableCreator((name) => `fintech_port_${name}`);
 
 // TRANSACTIONS
 export const transactions = createTable("transactions", (d) => ({
-	id: d
-		.varchar({ length: 255 })
-		.notNull()
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	userId: d
-		.varchar({ length: 255 })
-		.notNull()
-		.references(() => users.id),
-	bankAccountId: d.varchar({ length: 255 }).notNull(),
-	amount: d.numeric(),
-	balance: d.numeric(),
-	description: d.text(),
-	category: d.text(),
+  id: d
+    .varchar({ length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: d
+    .varchar({ length: 255 })
+    .notNull()
+    .references(() => users.id),
+  bankAccountId: d
+    .varchar({ length: 255 })
+    .notNull()
+    .references(() => bankAccounts.id),
+  amount: d.numeric(),
+  balance: d.numeric(),
+  description: d.text(),
+  category: d.text(),
+  date: d.timestamp({ mode: "date"}),
 }));
 
 // BANKACCOUNTS TODO: expand to add real accounts with stripe maybe

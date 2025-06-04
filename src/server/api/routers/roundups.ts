@@ -1,14 +1,12 @@
 import { z } from "zod";
-
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { db } from "~/server/db";
 import { roundUps } from "~/server/db/schema";
 
 export const roundUpRouter = createTRPCRouter({
 	createMultiple: publicProcedure
 		.input(
 			z.object({
-				bankAccountId: z.string().min(1),
 				rows: z
 					.array(
 						z.object({
@@ -20,16 +18,34 @@ export const roundUpRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const userId: string = ctx.session?.user.id || "dev_err";
+			if (!ctx.session?.user?.id) {
+				throw new Error("Not authenticated");
+			}
+			const userId = ctx.session.user.id;
 
 			const toInsert = input.rows.map((r) => ({
-				amount_cents: Math.round(r.amount * 100),
 				userId: userId,
 				transactionId: r.transactionId,
+				amount_cents: Math.round(r.amount * 100),
 			}));
 
 			const result = await ctx.db.insert(roundUps).values(toInsert);
 
-			return { success: true };
+			return {
+				insertedCount: Array.isArray(toInsert) ? toInsert.length : 0,
+			};
 		}),
+
+    getMultiple: publicProcedure.query(async ({ ctx }) => {
+      const userId = ctx.session?.user?.id;
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const userRoundUps = await ctx.db.query.roundUps.findMany({
+        where: (roundUp, { eq }) => eq(roundUp.userId, userId),
+      });
+
+      return userRoundUps;
+    }),
 });

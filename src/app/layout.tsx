@@ -24,7 +24,11 @@ export default function RootLayout({
 		<html lang="en" className={`${geist.variable}`}>
 			<body>
 				<SessionProvider>
-					<TRPCReactProvider>{children}</TRPCReactProvider>
+					<TRPCReactProvider>
+              <main>
+                {children}
+              </main>
+          </TRPCReactProvider>
 				</SessionProvider>
 			</body>
 		</html>
