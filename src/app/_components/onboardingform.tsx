@@ -73,10 +73,8 @@ export function OnboardingForm() {
 
 	const createBankEntryMutation = api.bank.create.useMutation();
 	const modifyUserPreferencesMutation = api.user.update.useMutation();
-	const pushTransactionsMutation =
-		api.transaction.pushTransactions.useMutation();
-	const createMultipleRoundUpMutation =
-		api.roundUp.createMultiple.useMutation();
+	const pushTransactionsMutation = api.transaction.pushTransactions.useMutation();
+	const createMultipleRoundUpMutation = api.roundUp.createMultiple.useMutation();
 
 	const onSubmit = async (data: z.infer<typeof FormSchema>) => {
 
@@ -156,12 +154,9 @@ export function OnboardingForm() {
 										createMultipleRoundUpMutation.mutate({ rows });
 									}
 
-									setProgress(80);
+									setProgress(100);
+									router.push("/dashboard");
 
-									//on success, send to dashboard
-									// router.prefetch("/dashboard");
-									setTimeout(() => setProgress(100), 50);
-									// router.push("/dashboard");
 								},
 								onError: (error) => {
 									console.error("Failed to upload transactions:", error);

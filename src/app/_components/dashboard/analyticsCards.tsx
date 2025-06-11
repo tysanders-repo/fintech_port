@@ -1,159 +1,145 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card"
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "~/components/ui/chart"
+import { useMemo } from "react";
+import { FiDollarSign, FiBarChart, FiInfo } from "react-icons/fi";
+import { PiPiggyBankFill } from "react-icons/pi";
+import { motion } from "framer-motion";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardFooter
+} from "~/components/ui/card";
 import { api } from "~/trpc/react";
-import { z } from "zod"
+import CountUp from "~/components/ui/countup";
+import { MainGraph } from "./MainGraph";
 
+// Animated versions
+const MotionCard = motion(Card);
+const MotionIcon = motion(FiInfo);
+
+// Common hover/tap transition
+const hoverTapTransition = { type: 'spring', stiffness: 260, damping: 20 };
 
 export function AnalyticCards() {
+  const { data: latestBalance, isLoading: balanceLoading, error: balanceError } = api.transaction.getLatest.useQuery();
+  const { data: roundUps = [], isLoading: roundupsLoading, error: roundupsError } = api.roundUp.getMultiple.useQuery();
 
-  const transactions = api.transaction.getMultiple.useQuery();
-  const roundUps = api.roundUp.getMultiple.useQuery();
+  const balanceNumber = useMemo(
+    () => (latestBalance?.balance ? Number(latestBalance.balance) : 0),
+    [latestBalance]
+  );
 
-  const chartDataSchema = z.object({
-    Date: z.coerce.date(),
-    Balance: z.coerce.number(),
-    RoundUpTotal: z.coerce.number(),
-  })
+  const totalRoundups = useMemo(
+    () => roundUps.reduce((sum, r) => sum + ((r.amount_cents ?? 0) / 100), 0),
+    [roundUps]
+  );
 
-  const roundUpAmountsByTransaction = new Map<string, number>();
-  if (roundUps.data) {
-    for (const roundUp of roundUps.data) {
-      if (roundUp?.transactionId) {
-        const currentAmount = roundUpAmountsByTransaction.get(roundUp.transactionId) || 0;
-        roundUpAmountsByTransaction.set(
-          roundUp.transactionId,
-          currentAmount + (roundUp.amount_cents ?? 0) / 100
-        );
-      }
-    }
+  if (balanceLoading || roundupsLoading) {
+    return <div className="text-center py-10 text-gray-500">Loading analytics...</div>;
+  }
+  if (balanceError || roundupsError) {
+    return <div className="text-center py-10 text-red-500">Error loading analytics. Please try again.</div>;
   }
 
-  let cumulativeRoundUpSum = 0;
+  return (
+    <div className="space-y-8">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        {[
+          {
+            title: 'Total Balance',
+            Icon: FiDollarSign,
+            value: balanceNumber,
+            footer: 'Your available funds for everyday spending.'
+          },
+          {
+            title: 'Round‑Up Savings',
+            Icon: PiPiggyBankFill,
+            value: totalRoundups,
+            footer: 'Your spare change invested automatically.'
+          }
+        ].map(({ title, Icon, value, footer }) => (
+          <MotionCard
+            key={title}
+            className="p-6 shadow-lg rounded-2xl relative"
+            style={{ transformOrigin: 'center center' }}
+            whileHover={{ scale: 1.03, boxShadow: '0 20px 30px rgba(0,0,0,0.1)' }}
+            whileTap={{ scale: 0.97 }}
+            transition={hoverTapTransition}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+          >
+            <CardHeader className="flex items-center justify-start space-x-3 pb-4">
+              <Icon className="h-6 w-6 text-gray-700" />
+              <CardTitle className="text-lg font-semibold text-gray-900 text-left">{title}</CardTitle>
+            </CardHeader>
 
-  const chartData = transactions.data
-    ?.map((r) => {
-      // 2. For each transaction, get its specific roundup amount (or 0 if none)
-      const specificRoundUpAmount = roundUpAmountsByTransaction.get(r.id) || 0;
+            <CardContent className="flex flex-col items-start h-40 justify-end pb-4">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25, mass: 0.5 }}
+                className="flex items-baseline space-x-1"
+              >
+                <span className="text-5xl font-bold text-gray-900">$</span>
+                <CountUp
+                  from={0}
+                  to={value}
+                  separator="," 
+                  duration={1}
+                  className="text-5xl font-bold text-gray-900"
+                />
+              </motion.div>
+            </CardContent>
 
-      // 3. Accumulate the sum based on the order of the transactions
-      cumulativeRoundUpSum += specificRoundUpAmount;
-      
-      return chartDataSchema.parse({
-        Date: r.date,
-        Balance: r.balance,
-        RoundUpTotal: cumulativeRoundUpSum // Use the accumulated sum here
-      });
-    })
-    .sort((a, b) => a.Date.getTime() - b.Date.getTime()) // Crucial for cumulative sum to be correct
-
-
-    const chartConfig = {
-    Balance: {
-      label: "Balance",
-      color: "var(--chart-1)",
-    },
-    RoundUpTotal: {
-      label: "Round Up Total",
-      color: "var(--chart-2)",
-    },
-  } satisfies ChartConfig
-
-
-  const minBalance = chartData
-    ? Math.min(...chartData.map((d) => d.Balance))
-    : 0
-  const maxBalance = chartData
-    ? Math.max(...chartData.map((d) => d.Balance))
-    : 1000 // Default max if no data
-
-  return(
-    <>
-      <div className="flex">
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle>Overall Balance vs. Roundup Savings</CardTitle>
-          </CardHeader>
-          <CardContent className="h-64 w-128">
-            <ChartContainer config={chartConfig}>
-              <LineChart
-              accessibilityLayer
-              data={chartData}
-              margin={{
-                left: 12,
-                right: 12,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="Date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(val) => String(val).slice(0, 10)} 
-              />
-              <YAxis
-                domain={["auto", "auto"]}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(val) => `$${val}`}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(label) => {
-                      const date = typeof label === "string" || typeof label === "number"
-                        ? new Date(label)
-                        : label;
-                      return isNaN(date.getTime())
-                        ? String(label)
-                        : date.toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          });
-                    }}
-                  />
-                }
-              />
-              <Line
-                dataKey="Balance"
-                type="monotone"
-                stroke="var(--chart-1)"
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                dataKey="RoundUpTotal"
-                type="monotone"
-                stroke="var(--chart-2)"
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-        </ChartContainer>
-          </CardContent>
-        </Card>
-
-
+            <CardFooter className="pt-4 border-t">
+              <p className="text-sm text-gray-500 flex items-center space-x-2">
+                <MotionIcon
+                  className="h-4 w-4"
+                  whileHover={{ rotate: 15 }}
+                  transition={hoverTapTransition}
+                />
+                <span>{footer}</span>
+              </p>
+            </CardFooter>
+          </MotionCard>
+        ))}
       </div>
-    </>
-  )
+
+      {/* Trend Graph */}
+      <MotionCard
+        className="shadow-lg rounded-2xl relative"
+        style={{ transformOrigin: 'center center' }}
+        whileHover={{ scale: 1.02, boxShadow: '0 20px 30px rgba(0,0,0,0.1)' }}
+        whileTap={{ scale: 0.98 }}
+        transition={hoverTapTransition}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+      >
+        <CardHeader className="flex items-center justify-start space-x-3 pb-4">
+          <FiBarChart className="h-6 w-6 text-gray-700" />
+          <CardTitle className="text-lg font-semibold text-gray-900 text-left">Balance & Savings Trends</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <MainGraph />
+        </CardContent>
+
+        <CardFooter className="pt-4 border-t">
+          <p className="text-sm text-gray-500 flex items-center space-x-2">
+            <MotionIcon
+              className="h-4 w-4"
+              whileHover={{ rotate: 15 }}
+              transition={hoverTapTransition}
+            />
+            <span>Track progress to maximize your financial health.</span>
+          </p>
+        </CardFooter>
+      </MotionCard>
+    </div>
+  );
 }

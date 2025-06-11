@@ -29,7 +29,7 @@ export const transactionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId: string = ctx.session?.user.id || "dev_err";
       //delete all existing transactions where user matches
-    await ctx.db.delete(roundUps).where(eq(roundUps.userId, userId));
+      await ctx.db.delete(roundUps).where(eq(roundUps.userId, userId));
       await ctx.db.delete(transactions).where(eq(transactions.userId, userId));
 
       const toInsert = input.rows.map((r) => ({
@@ -38,7 +38,7 @@ export const transactionRouter = createTRPCRouter({
         description: r.description,
         bankAccountId: input.bankAccountId,
         userId: userId,
-    date: r.date
+        date: r.date
       }));
 
       const result = await ctx.db
@@ -62,4 +62,19 @@ export const transactionRouter = createTRPCRouter({
 
   return userTransactions;
   }),
+
+  getLatest: publicProcedure.query( async ({ ctx }) => {
+    const userId = ctx.session?.user?.id;
+  if (!userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const latestUserBalance = await ctx.db.query.transactions.findFirst({
+    where: (transaction, { eq }) => eq(transaction.userId, userId),
+    orderBy: (transaction, { desc }) => desc(transaction.date),
+  });
+
+  return latestUserBalance;
+    
+  })
 });
