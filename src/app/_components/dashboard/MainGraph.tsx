@@ -10,13 +10,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "~/components/ui/card"
+} from "~/components/ui/card" // Assuming these are from your /ui/card
 import {
   type ChartConfig,
-  ChartContainer,
+  ChartContainer, // This is key for responsiveness
   ChartTooltip,
   ChartTooltipContent,
-} from "~/components/ui/chart"
+} from "~/components/ui/chart" // Assuming these are from your /ui/chart
 import { api } from "~/trpc/react";
 import { z } from "zod"
 
@@ -54,7 +54,7 @@ export function MainGraph() {
 
       // 3. Accumulate the sum based on the order of the transactions
       cumulativeRoundUpSum += specificRoundUpAmount;
-      
+
       return chartDataSchema.parse({
         Date: r.date,
         Balance: r.balance,
@@ -84,65 +84,65 @@ export function MainGraph() {
     : 1000 // Default max if no data
 
   return(
-    <div className="w-192">
-      <ChartContainer config={chartConfig}>
-              <LineChart
-              accessibilityLayer
-              data={chartData}
-              margin={{
-                left: 12,
-                right: 12,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="Date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(val) => String(val).slice(0, 10)} 
-              />
-              <YAxis
-                domain={["auto", "auto"]}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(val) => `$${val}`}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(label) => {
-                      const date = typeof label === "string" || typeof label === "number"
-                        ? new Date(label)
-                        : label;
-                      return isNaN(date.getTime())
-                        ? String(label)
-                        : date.toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          });
-                    }}
-                  />
-                }
-              />
-              <Line
-                dataKey="Balance"
-                type="monotone"
-                stroke="var(--chart-1)"
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                dataKey="RoundUpTotal"
-                type="monotone"
-                stroke="var(--chart-2)"
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-        </ChartContainer>
-    </div>
+    // REMOVE THE outer div with `w-192`
+    // ChartContainer already takes 100% width of its parent (CardContent)
+    <ChartContainer config={chartConfig} className="min-h-[200px] h-[300px] w-full">
+            <LineChart
+            accessibilityLayer
+            data={chartData}
+            margin={{
+              left: 12,
+              right: 12,
+            }}
+          >
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="Date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={(val) => new Date(val).toLocaleDateString()} // More readable date
+            />
+            <YAxis
+              domain={["auto", "auto"]}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(val) => `$${val}`}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(label) => {
+                    const date = typeof label === "string" || typeof label === "number"
+                      ? new Date(label)
+                      : label;
+                    return isNaN(date.getTime())
+                      ? String(label)
+                      : date.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        });
+                  }}
+                />
+              }
+            />
+            <Line
+              dataKey="Balance"
+              type="monotone"
+              stroke="var(--chart-1)"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              dataKey="RoundUpTotal"
+              type="monotone"
+              stroke="var(--chart-2)"
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
+      </ChartContainer>
   )
 }

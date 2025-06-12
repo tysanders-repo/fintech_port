@@ -21,18 +21,19 @@ const geist = Geist({
 });
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-	return (
+return (
 		<html lang="en" className={`${geist.variable}`}>
-			<body>
+			<body className="overflow-hidden">
 				<SessionProvider>
 					<TRPCReactProvider>
            <SidebarProvider>
-             {/* Make a flex container so sidebar sits beside the main area */}
              <div className="flex h-screen w-screen">
                <AppSidebar />
-               <main className="flex-1 flex flex-col items-center justify-center">
+               <main className="flex-1 flex flex-col overflow-y-auto">
                  <SidebarTrigger />
-                 {children}
+                 <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8">
+                   {children}
+                 </div>
                  <Footer />
                </main>
              </div>
